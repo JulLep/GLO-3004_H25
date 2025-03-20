@@ -1,0 +1,358 @@
+// Classe principale pour exécuter le programme
+public class ChocolaterieApp {
+    public static void main(String[] args) {
+        // Paramètres configurables
+        int nombreChocolatiers = 3;  // Valeur par défaut comme dans la spécification
+        int nombreTempereuses = 1;   // Valeur par défaut comme dans la spécification
+        int nombreMouleuses = 1;     // Valeur par défaut comme dans la spécification
+        
+        // Configuration via arguments en ligne de commande
+        if (args.length > 0) {
+            try {
+                nombreChocolatiers = Integer.parseInt(args[0]);
+                if (args.length > 1) {
+                    nombreTempereuses = Integer.parseInt(args[1]);
+                }
+                if (args.length > 2) {
+                    nombreMouleuses = Integer.parseInt(args[2]);
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Format d'arguments invalide. Utilisation des valeurs par défaut.");
+            }
+        }
+        
+        // Affichage de la configuration initiale
+        System.out.println("=== Configuration de la Chocolaterie de Willy Wonka ===");
+        System.out.println("Nombre de chocolatiers: " + nombreChocolatiers);
+        System.out.println("Nombre de tempéreuses: " + nombreTempereuses);
+        System.out.println("Nombre de mouleuses: " + nombreMouleuses);
+        System.out.println("====================================================");
+        
+        // Création des ressources partagées
+        ControleTempereuse controleTempereuse = new ControleTempereuse(nombreTempereuses);
+        ControleMouleuse controleMouleuse = new ControleMouleuse(nombreMouleuses);
+        ApprovisionnementManager approManager = new ApprovisionnementManager();
+        
+        // Création des chocolatiers
+        Thread[] chocolatiersN = new Thread[nombreChocolatiers];
+        Thread[] chocolatiersB = new Thread[nombreChocolatiers];
+        
+        for (int i = 0; i < nombreChocolatiers; i++) {
+            chocolatiersN[i] = new Thread(new Chocolatier("n", i+1, controleTempereuse, controleMouleuse, approManager));
+            chocolatiersB[i] = new Thread(new Chocolatier("b", i+1, controleTempereuse, controleMouleuse, approManager));
+            
+            // Définir les priorités pour éviter la famine
+            // Les chocolatiers de type "n" ont une priorité plus élevée
+            chocolatiersN[i].setPriority(Thread.MAX_PRIORITY);
+            chocolatiersB[i].setPriority(Thread.MIN_PRIORITY);
+            
+            chocolatiersN[i].start();
+            chocolatiersB[i].start();
+        }
+        
+        // Simulation de ruptures périodiques
+        Thread ruptureThread = new Thread(new RuptureSimulator(approManager, nombreChocolatiers));
+        ruptureThread.start();
+        
+        // Interface utilisateur simple pour modifier les paramètres pendant l'exécution
+        Thread uiThread = new Thread(new SimpleUI(controleTempereuse, controleMouleuse));
+        uiThread.start();
+    }
+}
+
+// Classe qui représente un chocolatier
+class Chocolatier implements Runnable {
+    private final String type;        // Type de chocolatier (n ou b)
+    private final int id;             // Identifiant unique du chocolatier
+    private final ControleTempereuse controleTempereuse;
+    private final ControleMouleuse controleMouleuse;
+    private final ApprovisionnementManager approManager;
+    
+    public Chocolatier(String type, int id, ControleTempereuse controleTempereuse, 
+                      ControleMouleuse controleMouleuse, ApprovisionnementManager approManager) {
+        this.type = type;
+        this.id = id;
+        this.controleTempereuse = controleTempereuse;
+        this.controleMouleuse = controleMouleuse;
+        this.approManager = approManager;
+    }
+    
+    @Override
+    public void run() {
+        try {
+            while (true) {
+                // Vérifier s'il y a une rupture
+                if (approManager.estEnRupture(type)) {
+                    log("rupture");
+                    approManager.attendreApprovisionnement(type);
+                    log("approvisionnement");
+                }
+                
+                // Étape de la tempéreuse
+                log("requiereTempereuse");
+                controleTempereuse.requiereTempereuse(type, id);
+                log("tempereChocolat");
+                Thread.sleep((long) (Math.random() * 1000)); // Simulation du temps de tempérage
+                log("donneChocolat");
+                controleTempereuse.donneChocolat(type, id);
+                
+                // Étape de la mouleuse
+                log("requiereMouleuse");
+                controleMouleuse.requiereMouleuse(type, id);
+                log("remplit");
+                Thread.sleep((long) (Math.random() * 500)); // Simulation du temps de remplissage
+                log("garnit");
+                Thread.sleep((long) (Math.random() * 300)); // Simulation du temps de garnissage
+                log("ferme");
+                controleMouleuse.ferme(type, id);
+                
+                // Pause entre cycles de production
+                Thread.sleep((long) (Math.random() * 2000));
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log("interrompu");
+        }
+    }
+    
+    private void log(String action) {
+        System.out.println("[" + type + "." + id + "] " + action);
+    }
+}
+
+// Classe qui gère le contrôle d'accès aux tempéreuses
+class ControleTempereuse {
+    private int nombreTempereuses;
+    private int nnOccupees = 0;       // Nombre de tempéreuses occupées par des chocolatiers de type n
+    private int nbOccupees = 0;       // Nombre de tempéreuses occupées par des chocolatiers de type b
+    private int wnEnAttente = 0;      // Nombre de chocolatiers n en attente
+    private int wbEnAttente = 0;      // Nombre de chocolatiers b en attente
+    private boolean dernierAUtiliser = true;  // true pour n, false pour b
+    
+    public ControleTempereuse(int nombreTempereuses) {
+        this.nombreTempereuses = nombreTempereuses;
+    }
+    
+    public synchronized void requiereTempereuse(String type, int id) throws InterruptedException {
+        if (type.equals("n")) {
+            wnEnAttente++;
+            while (!(nbOccupees == 0 && (wbEnAttente == 0 || !dernierAUtiliser) && nnOccupees < nombreTempereuses)) {
+                wait();
+            }
+            wnEnAttente--;
+            nnOccupees++;
+        } else { // type b
+            wbEnAttente++;
+            while (!(nnOccupees == 0 && (wnEnAttente == 0 || dernierAUtiliser) && nbOccupees < nombreTempereuses)) {
+                wait();
+            }
+            wbEnAttente--;
+            nbOccupees++;
+        }
+    }
+    
+    public synchronized void donneChocolat(String type, int id) {
+        if (type.equals("n")) {
+            nnOccupees--;
+            dernierAUtiliser = true;
+        } else { // type b
+            nbOccupees--;
+            dernierAUtiliser = false;
+        }
+        notifyAll();
+    }
+    
+    public synchronized void setNombreTempereuses(int nombreTempereuses) {
+        this.nombreTempereuses = nombreTempereuses;
+        System.out.println("[SYSTÈME] Nombre de tempéreuses modifié à: " + nombreTempereuses);
+        notifyAll();
+    }
+    
+    public synchronized int getNombreTempereuses() {
+        return nombreTempereuses;
+    }
+}
+
+// Classe qui gère le contrôle d'accès aux mouleuses
+class ControleMouleuse {
+    private int nombreMouleuses;
+    private int nnOccupees = 0;       // Nombre de mouleuses occupées par des chocolatiers de type n
+    private int nbOccupees = 0;       // Nombre de mouleuses occupées par des chocolatiers de type b
+    private int wnEnAttente = 0;      // Nombre de chocolatiers n en attente
+    private int wbEnAttente = 0;      // Nombre de chocolatiers b en attente
+    private boolean dernierAUtiliser = true;  // true pour n, false pour b
+    
+    public ControleMouleuse(int nombreMouleuses) {
+        this.nombreMouleuses = nombreMouleuses;
+    }
+    
+    public synchronized void requiereMouleuse(String type, int id) throws InterruptedException {
+        if (type.equals("n")) {
+            wnEnAttente++;
+            while (!(nbOccupees == 0 && (wbEnAttente == 0 || !dernierAUtiliser) && nnOccupees < nombreMouleuses)) {
+                wait();
+            }
+            wnEnAttente--;
+            nnOccupees++;
+        } else { // type b
+            wbEnAttente++;
+            while (!(nnOccupees == 0 && (wnEnAttente == 0 || dernierAUtiliser) && nbOccupees < nombreMouleuses)) {
+                wait();
+            }
+            wbEnAttente--;
+            nbOccupees++;
+        }
+    }
+    
+    public synchronized void ferme(String type, int id) {
+        if (type.equals("n")) {
+            nnOccupees--;
+            dernierAUtiliser = true;
+        } else { // type b
+            nbOccupees--;
+            dernierAUtiliser = false;
+        }
+        notifyAll();
+    }
+    
+    public synchronized void setNombreMouleuses(int nombreMouleuses) {
+        this.nombreMouleuses = nombreMouleuses;
+        System.out.println("[SYSTÈME] Nombre de mouleuses modifié à: " + nombreMouleuses);
+        notifyAll();
+    }
+    
+    public synchronized int getNombreMouleuses() {
+        return nombreMouleuses;
+    }
+}
+
+// Classe qui gère les ruptures et approvisionnements
+class ApprovisionnementManager {
+    private boolean ruptureN = false;
+    private boolean ruptureB = false;
+    
+    public synchronized boolean estEnRupture(String type) {
+        return type.equals("n") ? ruptureN : ruptureB;
+    }
+    
+    public synchronized void declencherRupture(String type) {
+        if (type.equals("n")) {
+            ruptureN = true;
+            System.out.println("[SYSTÈME] Rupture de chocolat de type n");
+        } else {
+            ruptureB = true;
+            System.out.println("[SYSTÈME] Rupture de chocolat de type b");
+        }
+    }
+    
+    public synchronized void approvisionner(String type) {
+        if (type.equals("n")) {
+            ruptureN = false;
+            System.out.println("[SYSTÈME] Approvisionnement en chocolat de type n");
+        } else {
+            ruptureB = false;
+            System.out.println("[SYSTÈME] Approvisionnement en chocolat de type b");
+        }
+        notifyAll();
+    }
+    
+    public synchronized void attendreApprovisionnement(String type) throws InterruptedException {
+        while (estEnRupture(type)) {
+            wait();
+        }
+    }
+}
+
+// Simulateur de ruptures
+class RuptureSimulator implements Runnable {
+    private final ApprovisionnementManager approManager;
+    private final int nombreChocolatiers;
+    private int compteurRequetes = 0;
+    
+    public RuptureSimulator(ApprovisionnementManager approManager, int nombreChocolatiers) {
+        this.approManager = approManager;
+        this.nombreChocolatiers = nombreChocolatiers;
+    }
+    
+    @Override
+    public void run() {
+        try {
+            while (true) {
+                // Attendre un moment avant de déclencher une rupture
+                Thread.sleep(10000);
+                
+                // Déclencher une rupture aléatoirement pour n ou b
+                String type = Math.random() < 0.5 ? "n" : "b";
+                approManager.declencherRupture(type);
+                
+                // Attendre un moment avant de réapprovisionner
+                Thread.sleep(5000);
+                
+                // Réapprovisionner
+                approManager.approvisionner(type);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+}
+
+// Interface utilisateur simple pour modifier les paramètres
+class SimpleUI implements Runnable {
+    private final ControleTempereuse controleTempereuse;
+    private final ControleMouleuse controleMouleuse;
+    private final java.util.Scanner scanner;
+    
+    public SimpleUI(ControleTempereuse controleTempereuse, ControleMouleuse controleMouleuse) {
+        this.controleTempereuse = controleTempereuse;
+        this.controleMouleuse = controleMouleuse;
+        this.scanner = new java.util.Scanner(System.in);
+    }
+    
+    @Override
+    public void run() {
+        System.out.println("\n=== Interface de contrôle de la chocolaterie ===");
+        System.out.println("Commandes disponibles:");
+        System.out.println("  t <nombre> : Modifier le nombre de tempéreuses");
+        System.out.println("  m <nombre> : Modifier le nombre de mouleuses");
+        System.out.println("  q          : Quitter le programme");
+        
+        boolean continuer = true;
+        while (continuer) {
+            System.out.print("\nEntrez une commande: ");
+            String commande = scanner.nextLine().trim();
+            
+            if (commande.startsWith("t ")) {
+                try {
+                    int nombre = Integer.parseInt(commande.substring(2).trim());
+                    if (nombre > 0) {
+                        controleTempereuse.setNombreTempereuses(nombre);
+                    } else {
+                        System.out.println("Le nombre doit être positif");
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Format invalide");
+                }
+            } else if (commande.startsWith("m ")) {
+                try {
+                    int nombre = Integer.parseInt(commande.substring(2).trim());
+                    if (nombre > 0) {
+                        controleMouleuse.setNombreMouleuses(nombre);
+                    } else {
+                        System.out.println("Le nombre doit être positif");
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Format invalide");
+                }
+            } else if (commande.equals("q")) {
+                System.out.println("Arrêt du programme...");
+                System.exit(0);
+                continuer = false;
+            } else {
+                System.out.println("Commande non reconnue");
+            }
+        }
+        
+        scanner.close();
+    }
+}

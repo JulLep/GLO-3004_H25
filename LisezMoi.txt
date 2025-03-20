@@ -1,0 +1,108 @@
+# LisezMoi - Travail pratique 2
+## Spécification et vérification formelle de logiciels (GLO-3004)
+## L'usine de chocolat Willy Wonka
+### Hiver 2025
+
+---
+
+## Équipe
+- [Insérez ici les numéros de matricule et noms des membres de l'équipe]
+
+111075370 Julien Rhéaume-Lepage
+
+## Description du projet
+
+Ce programme Java implémente le système de contrôle d'une chocolaterie selon la spécification FSP fournie. Le système simule le fonctionnement d'une chocolaterie avec:
+- Des chocolatiers de deux types (n et b)
+- Des tempéreuses pour tempérer le chocolat
+- Des mouleuses pour mouler et garnir le chocolat
+- Des contraintes d'utilisation des ressources pour éviter les collisions et la famine
+
+## Exécution du programme
+
+### Prérequis
+- Java 21 ou ultérieur
+- Aucune bibliothèque externe n'est requise
+
+### Compilation
+```bash
+javac ChocolaterieApp.java
+```
+
+### Exécution
+Vous pouvez exécuter le programme avec différentes configurations:
+
+```bash
+# Exécution avec les paramètres par défaut (3 chocolatiers, 1 tempéreuse, 1 mouleuse)
+java ChocolaterieApp
+
+# Exécution avec un nombre personnalisé de chocolatiers (ex: 5)
+java ChocolaterieApp 5
+
+# Exécution avec un nombre personnalisé de chocolatiers et de tempéreuses
+java ChocolaterieApp 5 2
+
+# Exécution avec un nombre personnalisé de chocolatiers, tempéreuses et mouleuses
+java ChocolaterieApp 5 2 2
+```
+
+## Interprétation des sorties
+
+Le programme affiche des messages dans la console qui indiquent les actions effectuées par les différents acteurs du système. Voici comment interpréter les sorties:
+
+- `[n.1] requiereTempereuse` : Le chocolatier n n°1 demande l'accès à une tempéreuse
+- `[n.1] tempereChocolat` : Le chocolatier n n°1 tempère du chocolat
+- `[n.1] donneChocolat` : Le chocolatier n n°1 libère la tempéreuse
+- `[n.1] requiereMouleuse` : Le chocolatier n n°1 demande l'accès à une mouleuse
+- `[n.1] remplit` : Le chocolatier n n°1 remplit un moule
+- `[n.1] garnit` : Le chocolatier n n°1 garnit un moule
+- `[n.1] ferme` : Le chocolatier n n°1 ferme un moule et libère la mouleuse
+- `[n.1] rupture` : Le chocolatier n n°1 constate une rupture de stock
+- `[n.1] approvisionnement` : Le chocolatier n n°1 est approvisionné
+
+Les messages système sont préfixés par `[SYSTÈME]` et indiquent des événements tels que les ruptures, les approvisionnements ou les modifications de configuration.
+
+## Modification des paramètres
+
+### Pendant l'exécution
+
+Une interface en ligne de commande permet de modifier le nombre de tempéreuses et de mouleuses pendant l'exécution:
+
+1. Pour modifier le nombre de tempéreuses, entrez `t <nombre>` (ex: `t 2`)
+2. Pour modifier le nombre de mouleuses, entrez `m <nombre>` (ex: `m 3`)
+3. Pour quitter le programme, entrez `q`
+
+### Au démarrage
+
+Vous pouvez spécifier le nombre de chocolatiers, de tempéreuses et de mouleuses au lancement du programme comme expliqué dans la section "Exécution".
+
+## Fonctionnalités implémentées
+
+1. **Fonctionnalités de base**:
+   - Chocolatiers de types n et b travaillant en parallèle
+   - Utilisation des tempéreuses et mouleuses selon la spécification FSP
+   - Priorités pour éviter la famine
+   - Simulation de ruptures et approvisionnements
+
+2. **Paramètres configurables**:
+   - Nombre de chocolatiers
+   - Nombre de tempéreuses (BONUS)
+   - Nombre de mouleuses (BONUS)
+
+3. **Interface utilisateur**:
+   - Interface en ligne de commande pour modifier les paramètres en temps réel
+
+## Implémentation technique
+
+Le programme utilise les threads Java pour représenter les processus parallèles spécifiés en FSP:
+- Chaque chocolatier est représenté par un thread
+- Les ressources partagées (tempéreuses, mouleuses) sont gérées par des moniteurs
+- Les priorités des threads sont utilisées pour éviter la famine
+- Les mécanismes de synchronisation (wait/notify) sont utilisés pour la coordination
+
+## Limites et améliorations possibles
+
+1. Interface graphique pour une meilleure visualisation du système
+2. Statistiques de production (nombre de chocolats produits par type de chocolatier)
+3. Simulation d'autres étapes (entreposage, emballage, etc.)
+4. Différenciation des chocolatiers en fonction des allergènes
