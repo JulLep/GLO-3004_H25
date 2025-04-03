@@ -5,46 +5,33 @@
 
 ---
 
-## Équipe
-- [Insérez ici les numéros de matricule et noms des membres de l'équipe]
+## Équipe 43
 
-111075370 Julien Rhéaume-Lepage
-
-## Description du projet
-
-Ce programme Java implémente le système de contrôle d'une chocolaterie selon la spécification FSP fournie. Le système simule le fonctionnement d'une chocolaterie avec:
-- Des chocolatiers de deux types (n et b)
-- Des tempéreuses pour tempérer le chocolat
-- Des mouleuses pour mouler et garnir le chocolat
-- Des contraintes d'utilisation des ressources pour éviter les collisions et la famine
+536 993 955 Wan Rong Wu
+111 273 376 Boudo Cheik Evrard
+536 961 396 Vincent Cousineau
+111 075 370 Julien Rhéaume-Lepage
 
 ## Exécution du programme
 
-### Prérequis
-- Java 21 ou ultérieur
-- Aucune bibliothèque externe n'est requise
+Pour compiler tous ces fichiers, vous pouvez utiliser la commande:
+javac *.java
+Et pour exécuter l'application:
+java ChocolaterieApp X Y Z     ( où X = [nombreChocolatiers] // Y = [nombreTempereuses] // Z = [nombreMouleuses] )
 
-### Compilation
-```bash
-javac ChocolaterieApp.java
-```
+Les paramètres par défaut sont 3 chocolatiers, 1 tempéreuse, 1 mouleuse.
 
-### Exécution
-Vous pouvez exécuter le programme avec différentes configurations:
+Exemples : 
 
-```bash
-# Exécution avec les paramètres par défaut (3 chocolatiers, 1 tempéreuse, 1 mouleuse)
-java ChocolaterieApp
+Exécution avec un nombre personnalisé de chocolatiers (ex: 5)
+java ChocolaterieApp 5 1 1
 
-# Exécution avec un nombre personnalisé de chocolatiers (ex: 5)
-java ChocolaterieApp 5
+Exécution avec un nombre personnalisé de chocolatiers et de tempéreuses
+java ChocolaterieApp 5 2 1
 
-# Exécution avec un nombre personnalisé de chocolatiers et de tempéreuses
-java ChocolaterieApp 5 2
-
-# Exécution avec un nombre personnalisé de chocolatiers, tempéreuses et mouleuses
+Exécution avec un nombre personnalisé de chocolatiers, tempéreuses et mouleuses
 java ChocolaterieApp 5 2 2
-```
+
 
 ## Interprétation des sorties
 
@@ -62,47 +49,3 @@ Le programme affiche des messages dans la console qui indiquent les actions effe
 
 Les messages système sont préfixés par `[SYSTÈME]` et indiquent des événements tels que les ruptures, les approvisionnements ou les modifications de configuration.
 
-## Modification des paramètres
-
-### Pendant l'exécution
-
-Une interface en ligne de commande permet de modifier le nombre de tempéreuses et de mouleuses pendant l'exécution:
-
-1. Pour modifier le nombre de tempéreuses, entrez `t <nombre>` (ex: `t 2`)
-2. Pour modifier le nombre de mouleuses, entrez `m <nombre>` (ex: `m 3`)
-3. Pour quitter le programme, entrez `q`
-
-### Au démarrage
-
-Vous pouvez spécifier le nombre de chocolatiers, de tempéreuses et de mouleuses au lancement du programme comme expliqué dans la section "Exécution".
-
-## Fonctionnalités implémentées
-
-1. **Fonctionnalités de base**:
-   - Chocolatiers de types n et b travaillant en parallèle
-   - Utilisation des tempéreuses et mouleuses selon la spécification FSP
-   - Priorités pour éviter la famine
-   - Simulation de ruptures et approvisionnements
-
-2. **Paramètres configurables**:
-   - Nombre de chocolatiers
-   - Nombre de tempéreuses (BONUS)
-   - Nombre de mouleuses (BONUS)
-
-3. **Interface utilisateur**:
-   - Interface en ligne de commande pour modifier les paramètres en temps réel
-
-## Implémentation technique
-
-Le programme utilise les threads Java pour représenter les processus parallèles spécifiés en FSP:
-- Chaque chocolatier est représenté par un thread
-- Les ressources partagées (tempéreuses, mouleuses) sont gérées par des moniteurs
-- Les priorités des threads sont utilisées pour éviter la famine
-- Les mécanismes de synchronisation (wait/notify) sont utilisés pour la coordination
-
-## Limites et améliorations possibles
-
-1. Interface graphique pour une meilleure visualisation du système
-2. Statistiques de production (nombre de chocolats produits par type de chocolatier)
-3. Simulation d'autres étapes (entreposage, emballage, etc.)
-4. Différenciation des chocolatiers en fonction des allergènes

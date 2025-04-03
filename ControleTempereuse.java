@@ -39,13 +39,7 @@ public class ControleTempereuse {
         }
         notifyAll();
     }
-    
-    public synchronized void setNombreTempereuses(int nombreTempereuses) {
-        this.nombreTempereuses = nombreTempereuses;
-        System.out.println("[SYSTÈME] Nombre de tempéreuses modifié à: " + nombreTempereuses);
-        notifyAll();
-    }
-    
+      
     public synchronized int getNombreTempereuses() {
         return nombreTempereuses;
     }

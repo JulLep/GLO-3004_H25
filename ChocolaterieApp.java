@@ -67,11 +67,6 @@ public class ChocolaterieApp {
         ruptureThread.setDaemon(true); // Thread en arrière-plan
         ruptureThread.start();
         
-        // Démarrer l'interface utilisateur
-        SimpleUI ui = new SimpleUI(controleTempereuse, controleMouleuse);
-        Thread uiThread = new Thread(ui);
-        uiThread.start();
-        
         // Attendre que les threads des chocolatiers se terminent (ce qui ne devrait pas arriver)
         for (Thread t : threadsChocolatiers) {
             try {

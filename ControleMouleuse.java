@@ -39,12 +39,7 @@ public class ControleMouleuse {
         }
         notifyAll();
     }
-    
-    public synchronized void setNombreMouleuses(int nombreMouleuses) {
-        this.nombreMouleuses = nombreMouleuses;
-        System.out.println("[SYSTÈME] Nombre de mouleuses modifié à: " + nombreMouleuses);
-        notifyAll();
-    }
+
     
     public synchronized int getNombreMouleuses() {
         return nombreMouleuses;
